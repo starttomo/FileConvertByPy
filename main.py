@@ -4,6 +4,7 @@ from interfaces import run_cli, run_gui
 
 
 def main():
+
     # 加载所有转换器
     ConverterFactory.load_converters()
 

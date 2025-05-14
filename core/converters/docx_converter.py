@@ -3,15 +3,15 @@ from docx import Document
 from pathlib import Path
 from core.converters.base_converter import BaseConverter
 from core.exceptions import FileReadError, FileWriteError, UnsupportedFormatError, FileConversionError
-from core.registry import register_converter  # 改为从注册表导入
-
+from core.registry import register_converter
+import pypandoc
 class DocxConverter(BaseConverter):
     """处理DOCX文件的转换"""
 
     @classmethod
     def supported_formats(cls) -> dict:
         return {
-            'docx': ['txt', 'html'],
+            'docx': ['txt', 'html', 'pdf'],  # 添加 'pdf' 支持
             # 可以添加更多支持的输出格式
         }
 
@@ -24,6 +24,8 @@ class DocxConverter(BaseConverter):
                 cls._convert_to_txt(input_path, output_path)
             elif output_ext == 'html':
                 cls._convert_to_html(input_path, output_path)
+            elif output_ext == 'pdf':  # 添加对 pdf 转换的处理
+                cls._convert_to_pdf(input_path, output_path)
             else:
                 raise UnsupportedFormatError(f"不支持将 docx 转换为 {output_ext}")
         except Exception as e:
@@ -54,6 +56,26 @@ class DocxConverter(BaseConverter):
                 f.write('\n'.join(html_content))
         except Exception as e:
             raise FileWriteError(f"写入HTML文件失败: {str(e)}")
+
+    @classmethod
+    def _convert_to_pdf(cls, input_path: str, output_path: str):
+        try:
+            # 使用xelatex引擎并添加中文支持
+            pypandoc.convert_file(
+                input_path,
+                'pdf',
+                outputfile=output_path,
+                format='docx',
+                extra_args=[
+                    '--pdf-engine=xelatex',  # 使用xelatex引擎支持中文
+                    '-V', 'mainfont=SimHei',  # 指定中文字体
+                    '-V', 'geometry:a4paper',  # 设置纸张大小
+                ]
+            )
+        except ImportError:
+            raise FileConversionError("PDF转换需要安装pypandoc和系统上的LaTeX发行版")
+        except Exception as e:
+            raise FileWriteError(f"生成PDF失败: {str(e)}")
 
 # 注册转换器
 for input_ext, output_exts in DocxConverter.supported_formats().items():

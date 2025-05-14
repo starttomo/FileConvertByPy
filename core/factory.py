@@ -1,3 +1,4 @@
+# core/factory.py
 from core.registry import get_converter
 from core.exceptions import UnsupportedFormatError
 
@@ -17,3 +18,8 @@ class ConverterFactory:
         from core.converters import (
             docx_converter, pdf_converter, html_converter, doc_converter
         )
+
+    @classmethod
+    def get_converter(cls, input_ext, output_ext):
+        """获取适合的转换器类"""
+        return get_converter(input_ext, output_ext)

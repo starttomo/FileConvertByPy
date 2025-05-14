@@ -1,4 +1,6 @@
 # core/registry.py
+from core.exceptions import UnsupportedFormatError
+
 _converter_registry = {}
 
 def register_converter(input_ext, output_ext, converter_class):
